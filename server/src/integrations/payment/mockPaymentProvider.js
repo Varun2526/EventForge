@@ -6,9 +6,6 @@ export class MockPaymentProvider {
     return process.env.PAYMENT_WEBHOOK_SECRET || 'mock_whsec_test_secret_12345';
   }
 
-  /**
-   * Generates a deterministic mock payment intent.
-   */
   static async createPaymentIntent({ amount, currency = 'USD', metadata = {} }) {
     const id = `pi_mock_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
     return {
@@ -20,19 +17,15 @@ export class MockPaymentProvider {
       metadata
     };
   }
-
-  /**
-   * Generates signature for testing webhook delivery.
-   */
+  
+    // Generates signature for testing webhook delivery.
   static generateSignature(rawBody, secret = this.getWebhookSecret()) {
     const bodyStr = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');
     const hmac = crypto.createHmac('sha256', secret).update(bodyStr).digest('hex');
     return `t=${Date.now()},v1=${hmac}`;
   }
 
-  /**
-   * Verifies mock webhook signature header.
-   */
+  //Verifies mock webhook signature header.
   static verifyWebhookSignature({ rawBody, signature, secret = this.getWebhookSecret() }) {
     if (!signature) {
       throw new AppError('Missing webhook signature header.', 400, 'PAYMENT_SIGNATURE_INVALID');
@@ -59,9 +52,7 @@ export class MockPaymentProvider {
     return true;
   }
 
-  /**
-   * Parses webhook event payload after signature verification.
-   */
+  // Parses webhook event payload after signature verification.
   static parseWebhookEvent({ rawBody, signature, secret = this.getWebhookSecret() }) {
     this.verifyWebhookSignature({ rawBody, signature, secret });
     const bodyStr = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');
@@ -73,9 +64,7 @@ export class MockPaymentProvider {
     }
   }
 
-  /**
-   * Checks current status of a payment intent.
-   */
+  // Checks current status of a payment intent.
   static async getPaymentStatus(paymentIntentId) {
     return {
       id: paymentIntentId,

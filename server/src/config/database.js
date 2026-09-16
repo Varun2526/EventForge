@@ -12,7 +12,7 @@ export const connectDatabase = async () => {
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
 
-    // Check replica set status for transaction readiness
+
     try {
       const admin = conn.connection.db.admin();
       const status = await admin.command({ replSetGetStatus: 1 });

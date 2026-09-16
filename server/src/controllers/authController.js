@@ -1,9 +1,6 @@
 import { AuthService } from '../services/authService.js';
 
 export class AuthController {
-  /**
-   * POST /api/v1/auth/register
-   */
   static async register(req, res, next) {
     try {
       const { user, token } = await AuthService.register(req.body);
@@ -19,9 +16,6 @@ export class AuthController {
     }
   }
 
-  /**
-   * POST /api/v1/auth/login
-   */
   static async login(req, res, next) {
     try {
       const { user, token } = await AuthService.login(req.body);
@@ -37,9 +31,7 @@ export class AuthController {
     }
   }
 
-  /**
-   * GET /api/v1/auth/me
-   */
+  
   static async getMe(req, res, next) {
     try {
       const user = await AuthService.getProfile(req.user._id);
@@ -54,9 +46,7 @@ export class AuthController {
     }
   }
 
-  /**
-   * PUT /api/v1/auth/profile
-   */
+  
   static async updateProfile(req, res, next) {
     try {
       const updatedUser = await AuthService.updateProfile(req.user._id, req.body);

@@ -1,14 +1,5 @@
 import { AppError } from '../utils/AppError.js';
 
-/**
- * Higher-order middleware to validate incoming requests against Zod schemas.
- * Validates any combination of `body`, `params`, and `query`.
- *
- * @param {Object} schemas - Map of request parts to Zod schemas
- * @param {import('zod').ZodSchema} [schemas.body] - Schema for req.body
- * @param {import('zod').ZodSchema} [schemas.params] - Schema for req.params
- * @param {import('zod').ZodSchema} [schemas.query] - Schema for req.query
- */
 export const validateRequest = (schemas) => {
   return (req, res, next) => {
     const errorDetails = [];

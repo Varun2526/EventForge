@@ -5,10 +5,7 @@ import Coupon from '../models/Coupon.js';
 import { WaitlistService } from '../services/waitlistService.js';
 import { REGISTRATION_STATUS, PAYMENT_STATUS } from '../utils/constants.js';
 
-/**
- * Background Worker: Scans and expires ticket holds where holdExpiresAt < now.
- * Uses conditional matching inside MongoDB transactions to prevent race conditions with payment confirmation.
- */
+
 export const expireTicketHoldsJob = async () => {
   const expiredCandidates = await Registration.find({
     status: REGISTRATION_STATUS.HELD,

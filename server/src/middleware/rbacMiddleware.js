@@ -2,13 +2,8 @@ import { AppError } from '../utils/AppError.js';
 import Event from '../models/Event.js';
 import Organization from '../models/Organization.js';
 import SpeakerProfile from '../models/SpeakerProfile.js';
+import StaffAssignment from '../models/StaffAssignment.js';
 
-/**
- * Authorization guard for global platform-level roles.
- * Must be preceded by authenticate middleware.
- *
- * @param {...string} allowedRoles - Global roles permitted (e.g. 'platform_admin', 'user')
- */
 export const requireGlobalRole = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -29,12 +24,6 @@ export const requireGlobalRole = (...allowedRoles) => {
   };
 };
 
-/**
- * Authorization guard for organization-scoped operations (e.g. creating venues, creating events).
- * Must be preceded by authenticate middleware.
- *
- * @param {...string} allowedRoles - Organization roles allowed ('owner', 'admin', 'member')
- */
 export const requireOrganizationRole = (...allowedRoles) => {
   return async (req, res, next) => {
     try {
@@ -81,13 +70,6 @@ export const requireOrganizationRole = (...allowedRoles) => {
   };
 };
 
-/**
- * Event-scoped role authorization guard.
- * Resolves contextually whether the authenticated user is an organizer, staff, or speaker on the event.
- * Must be preceded by authenticate middleware.
- *
- * @param {...string} allowedEventRoles - Event-scoped roles permitted ('event_organizer', 'event_staff', 'speaker')
- */
 export const requireEventRole = (...allowedEventRoles) => {
   return async (req, res, next) => {
     try {
@@ -101,7 +83,7 @@ export const requireEventRole = (...allowedEventRoles) => {
         return next();
       }
 
-      const eventId = req.params.eventId || req.body?.eventRef || req.params.id;
+      const eventId = req.params.eventId || req.body?.eventId || req.body?.eventRef || req.query?.eventId || req.params.id;
       if (!eventId) {
         return next(new AppError('Event context is required for authorization.', 400, 'BAD_REQUEST'));
       }
@@ -153,6 +135,20 @@ export const requireEventRole = (...allowedEventRoles) => {
         if (speakerProfile) {
           req.eventRole = 'speaker';
           req.speakerProfile = speakerProfile;
+          return next();
+        }
+      }
+
+      // 4. Check if user is an active event staff member
+      if (allowedEventRoles.includes('event_staff')) {
+        const staffAssignment = await StaffAssignment.findOne({
+          eventRef: event._id,
+          userRef: req.user._id,
+          status: 'active'
+        });
+        if (staffAssignment) {
+          req.eventRole = 'event_staff';
+          req.staffAssignment = staffAssignment;
           return next();
         }
       }
