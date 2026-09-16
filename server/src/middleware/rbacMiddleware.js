@@ -1,4 +1,7 @@
 import { AppError } from '../utils/AppError.js';
+import Event from '../models/Event.js';
+import Organization from '../models/Organization.js';
+import SpeakerProfile from '../models/SpeakerProfile.js';
 
 /**
  * Authorization guard for global platform-level roles.
@@ -27,32 +30,136 @@ export const requireGlobalRole = (...allowedRoles) => {
 };
 
 /**
- * Event-scoped role authorization guard foundation.
- * Evaluates dynamic contextual permissions per event (Phase 2+).
- * Platform admins bypass event checks automatically.
+ * Authorization guard for organization-scoped operations (e.g. creating venues, creating events).
+ * Must be preceded by authenticate middleware.
  *
- * @param {...string} allowedEventRoles - Event-scoped roles permitted ('event_organizer', 'event_staff', 'speaker', 'attendee', 'sponsor')
+ * @param {...string} allowedRoles - Organization roles allowed ('owner', 'admin', 'member')
+ */
+export const requireOrganizationRole = (...allowedRoles) => {
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return next(new AppError('Authentication required prior to organization authorization.', 401, 'UNAUTHORIZED'));
+      }
+
+      if (req.user.globalRole === 'platform_admin') {
+        req.orgRole = 'owner';
+        return next();
+      }
+
+      const orgId = req.params.organizationId || req.body?.organizationRef || req.query?.organizationId || req.params.id;
+      if (!orgId) {
+        return next(new AppError('Organization context is required.', 400, 'BAD_REQUEST'));
+      }
+
+      const org = await Organization.findById(orgId);
+      if (!org) {
+        return next(new AppError('Organization not found.', 404, 'NOT_FOUND'));
+      }
+
+      const userIdStr = req.user._id.toString();
+
+      // Check owner
+      if (org.ownerRef.toString() === userIdStr) {
+        req.organization = org;
+        req.orgRole = 'owner';
+        return next();
+      }
+
+      // Check members
+      const memberRecord = (org.members || []).find((m) => m.userRef.toString() === userIdStr);
+      if (memberRecord && allowedRoles.includes(memberRecord.role)) {
+        req.organization = org;
+        req.orgRole = memberRecord.role;
+        return next();
+      }
+
+      return next(new AppError('Forbidden: You do not have permissions for this organization.', 403, 'FORBIDDEN'));
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+/**
+ * Event-scoped role authorization guard.
+ * Resolves contextually whether the authenticated user is an organizer, staff, or speaker on the event.
+ * Must be preceded by authenticate middleware.
+ *
+ * @param {...string} allowedEventRoles - Event-scoped roles permitted ('event_organizer', 'event_staff', 'speaker')
  */
 export const requireEventRole = (...allowedEventRoles) => {
   return async (req, res, next) => {
-    if (!req.user) {
-      return next(new AppError('Authentication required prior to event authorization.', 401, 'UNAUTHORIZED'));
-    }
+    try {
+      if (!req.user) {
+        return next(new AppError('Authentication required prior to event authorization.', 401, 'UNAUTHORIZED'));
+      }
 
-    // Platform admins have universal access across all event domains
-    if (req.user.globalRole === 'platform_admin') {
-      req.eventRole = 'platform_admin';
-      return next();
-    }
+      // Platform admin bypass
+      if (req.user.globalRole === 'platform_admin') {
+        req.eventRole = 'platform_admin';
+        return next();
+      }
 
-    // Contextual resolution will be wired in Phase 2 when Event & Staff models exist
-    // For now, provide standard hook
-    const eventId = req.params.eventId || req.body.eventRef || req.params.id;
-    if (!eventId) {
-      return next(new AppError('Event context required for authorization.', 400, 'BAD_REQUEST'));
-    }
+      const eventId = req.params.eventId || req.body?.eventRef || req.params.id;
+      if (!eventId) {
+        return next(new AppError('Event context is required for authorization.', 400, 'BAD_REQUEST'));
+      }
 
-    // Default rejection until event ownership/staff resolution is hooked in Phase 2
-    return next(new AppError('Forbidden: Insufficient event-scoped privileges.', 403, 'FORBIDDEN'));
+      const event = await Event.findById(eventId);
+      if (!event) {
+        return next(new AppError('Event not found.', 404, 'NOT_FOUND'));
+      }
+
+      req.event = event;
+      const userIdStr = req.user._id.toString();
+
+      // 1. Check if user is the direct event organizer
+      if (event.organizerRef.toString() === userIdStr) {
+        req.eventRole = 'event_organizer';
+        if (allowedEventRoles.includes('event_organizer')) {
+          return next();
+        }
+      }
+
+      // 2. Check if user is an owner/admin of the parent organization
+      const org = await Organization.findById(event.organizationRef);
+      if (org) {
+        if (org.ownerRef.toString() === userIdStr) {
+          req.eventRole = 'event_organizer';
+          if (allowedEventRoles.includes('event_organizer')) {
+            return next();
+          }
+        }
+
+        const isOrgAdmin = (org.members || []).some(
+          (m) => m.userRef.toString() === userIdStr && ['owner', 'admin'].includes(m.role)
+        );
+        if (isOrgAdmin) {
+          req.eventRole = 'event_organizer';
+          if (allowedEventRoles.includes('event_organizer')) {
+            return next();
+          }
+        }
+      }
+
+      // 3. Check if user is an assigned confirmed speaker
+      if (allowedEventRoles.includes('speaker')) {
+        const speakerProfile = await SpeakerProfile.findOne({
+          eventRef: event._id,
+          userRef: req.user._id,
+          status: 'confirmed'
+        });
+        if (speakerProfile) {
+          req.eventRole = 'speaker';
+          req.speakerProfile = speakerProfile;
+          return next();
+        }
+      }
+
+      return next(new AppError('Forbidden: You do not have the required event-scoped privileges.', 403, 'FORBIDDEN'));
+    } catch (err) {
+      next(err);
+    }
   };
 };
