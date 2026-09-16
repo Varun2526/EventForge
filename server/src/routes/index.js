@@ -4,6 +4,10 @@ import eventRoutes from './eventRoutes.js';
 import venueRoutes from './venueRoutes.js';
 import speakerRoutes from './speakerRoutes.js';
 import sessionRoutes from './sessionRoutes.js';
+import ticketRoutes from './ticketRoutes.js';
+import couponRoutes from './couponRoutes.js';
+import registrationRoutes from './registrationRoutes.js';
+import paymentRoutes from './paymentRoutes.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { requireGlobalRole } from '../middleware/rbacMiddleware.js';
 
@@ -27,6 +31,10 @@ router.use('/events', eventRoutes);
 router.use('/venues', venueRoutes);
 router.use('/speakers', speakerRoutes);
 router.use('/sessions', sessionRoutes);
+router.use('/tickets', ticketRoutes);
+router.use('/coupons', couponRoutes);
+router.use('/registrations', registrationRoutes);
+router.use('/payments', paymentRoutes);
 
 // RBAC Protected Test Route for Platform Admins (used in tests and monitoring)
 router.get('/admin/ping', authenticate, requireGlobalRole('platform_admin'), (req, res) => {
