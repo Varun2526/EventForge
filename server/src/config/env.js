@@ -10,6 +10,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, { message: 'JWT_SECRET must be at least 32 characters long' }),
   JWT_EXPIRES_IN: z.string().default('7d'),
   BADGE_JWT_SECRET: z.string().min(32).optional().default('eventforge_badge_hmac_secret_key_32bytes_min!'),
+  OPENAI_API_KEY: z.string().optional().default(''),
+  AI_PROVIDER: z.enum(['openai', 'mock']).default('mock'),
   CLIENT_URL: z.string().default('http://localhost:5173')
 });
 
