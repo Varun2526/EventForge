@@ -136,11 +136,14 @@ export class SponsorService {
 
       return sponsorship;
     } catch (err) {
-      // Roll back slot allocation if sponsorship record creation fails
-      await SponsorPackage.findByIdAndUpdate(packageRef, {
-        $inc: { allocatedSlots: -1 },
-        $set: { status: 'active' }
-      });
+      // Roll back slot allocation if sponsorship record creation fails with concurrency-safe guard
+      await SponsorPackage.findOneAndUpdate(
+        { _id: packageRef, allocatedSlots: { $gt: 0 } },
+        {
+          $inc: { allocatedSlots: -1 },
+          $set: { status: 'active' }
+        }
+      );
       throw err;
     }
   }

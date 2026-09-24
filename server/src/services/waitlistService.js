@@ -75,6 +75,7 @@ export class WaitlistService {
       status: REGISTRATION_STATUS.WAITLISTED,
       holdType: null,
       paymentStatus: PAYMENT_STATUS.UNPAID,
+      totalAmountPaid: tier.price * quantity,
       waitlistPosition: activeWaitlistCount + 1,
       waitlistJoinedAt: new Date(),
       attendeeDetails,
@@ -120,6 +121,9 @@ export class WaitlistService {
     nextInLine.holdType = HOLD_TYPES.WAITLIST_CLAIM;
     nextInLine.holdExpiresAt = new Date(Date.now() + WAITLIST_CLAIM_HOLD_HOURS * 60 * 60 * 1000);
     nextInLine.waitlistPosition = null;
+    if (!nextInLine.totalAmountPaid || nextInLine.totalAmountPaid <= 0) {
+      nextInLine.totalAmountPaid = tier.price * nextInLine.quantity;
+    }
     await nextInLine.save();
 
     return nextInLine;

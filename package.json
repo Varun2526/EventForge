@@ -1,0 +1,15 @@
+{
+  "name": "eventforge",
+  "version": "2.1.0",
+  "description": "Corporate Event & Conference Management Platform (Full-Stack MERN)",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server run test"
+  },
+  "keywords": ["mern", "react", "express", "mongodb", "nodejs", "conferences", "events"],
+  "author": "Varun",
+  "license": "ISC"
+}

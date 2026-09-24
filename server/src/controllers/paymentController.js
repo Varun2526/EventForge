@@ -20,7 +20,9 @@ export class PaymentController {
 
   static async handleWebhook(req, res, next) {
     try {
-      const provider = req.headers['x-payment-provider'] || 'mock';
+      const provider =
+        req.headers['x-payment-provider'] ||
+        (req.headers['stripe-signature'] ? 'stripe' : process.env.PAYMENT_PROVIDER || 'mock');
       const signature =
         req.headers['stripe-signature'] ||
         req.headers['x-mock-signature'] ||

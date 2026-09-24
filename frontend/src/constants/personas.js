@@ -1,0 +1,42 @@
+export const SEED_PERSONAS = [
+  {
+    roleKey: 'organizer',
+    label: 'Organizer',
+    name: 'Marcus Vance',
+    email: 'organizer@techforge.io',
+    description: 'Create & manage events, agenda, AI tools, analytics',
+    badgeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+  },
+  {
+    roleKey: 'attendee',
+    label: 'Attendee',
+    name: 'David Kim',
+    email: 'dave.attendee@gmail.com',
+    description: 'Browse events, hold tickets, QR badge, AI recommendations',
+    badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  },
+  {
+    roleKey: 'staff',
+    label: 'Event Staff',
+    name: 'Charlie Staff',
+    email: 'charlie.staff@eventforge.dev',
+    description: 'Gate badge scan & session door admissions',
+    badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  },
+  {
+    roleKey: 'speaker',
+    label: 'Speaker',
+    name: 'Dr. Alice Henderson',
+    email: 'alice.speaker@techforge.io',
+    description: 'Keynote sessions, presentation topics',
+    badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+  },
+  {
+    roleKey: 'admin',
+    label: 'Platform Admin',
+    name: 'System Admin',
+    email: 'admin@eventforge.dev',
+    description: 'Global organizations, user management, full access',
+    badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
+  },
+];

@@ -11,7 +11,11 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   BADGE_JWT_SECRET: z.string().min(32).optional().default('eventforge_badge_hmac_secret_key_32bytes_min!'),
   OPENAI_API_KEY: z.string().optional().default(''),
-  AI_PROVIDER: z.enum(['openai', 'mock']).default('mock'),
+  AI_PROVIDER: z.enum(['openai', 'mock']).default(process.env.OPENAI_API_KEY ? 'openai' : 'mock'),
+  STRIPE_SECRET_KEY: z.string().optional().default(''),
+  STRIPE_WEBHOOK_SECRET: z.string().optional().default(''),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional().default(''),
+  PAYMENT_PROVIDER: z.enum(['stripe', 'mock']).default(process.env.STRIPE_SECRET_KEY ? 'stripe' : 'mock'),
   CLIENT_URL: z.string().default('http://localhost:5173')
 });
 

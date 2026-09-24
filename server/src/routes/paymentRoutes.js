@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PaymentController } from '../controllers/paymentController.js';
 import { authenticate } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
+import { checkoutLimiter } from '../middleware/rateLimiter.js';
 import { createPaymentIntentSchema, verifyPaymentSchema } from '../validators/paymentValidator.js';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.post('/webhook', PaymentController.handleWebhook);
 router.post(
   '/create-intent',
   authenticate,
+  checkoutLimiter,
   validateRequest({ body: createPaymentIntentSchema }),
   PaymentController.createPaymentIntent
 );

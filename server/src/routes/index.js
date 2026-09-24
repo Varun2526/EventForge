@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import authRoutes from './authRoutes.js';
 import eventRoutes from './eventRoutes.js';
 import venueRoutes from './venueRoutes.js';
@@ -18,12 +19,17 @@ import { requireGlobalRole } from '../middleware/rbacMiddleware.js';
 
 const router = Router();
 
-// Health Check
+// Health Check (two-tier: process alive + database connected)
 router.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
+  const isDbConnected = mongoose.connection.readyState === 1;
+  const status = isDbConnected ? 'healthy' : 'degraded';
+  const statusCode = isDbConnected ? 200 : 503;
+
+  res.status(statusCode).json({
+    success: isDbConnected,
     data: {
-      status: 'healthy',
+      status,
+      database: isDbConnected ? 'connected' : 'disconnected',
       service: 'EventForge API',
       timestamp: new Date().toISOString()
     }
